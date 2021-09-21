@@ -8,12 +8,14 @@ import (
 	"github.com/pechorka/plang/token"
 )
 
+type lexerResult struct {
+	expectedType    token.Type
+	expectedLiteral string
+}
+
 func TestNext_basic(t *testing.T) {
 	input := `=+(){},;`
-	tests := []struct {
-		expectedType    token.Type
-		expectedLiteral string
-	}{
+	tests := []lexerResult{
 		{token.ASSIGN, "="},
 		{token.PLUS, "+"},
 		{token.LPAREN, "("},
@@ -24,6 +26,61 @@ func TestNext_basic(t *testing.T) {
 		{token.SEMICOLON, ";"},
 	}
 
+	testLexer(t, input, tests)
+}
+
+func TestNext_full(t *testing.T) {
+	input := `let five = 5;
+let ten = 10;
+   let add = fn(x, y) {
+     x + y;
+};
+let result = add(five, ten);
+`
+	tests := []lexerResult{
+		{token.LET, "let"},
+		{token.IDENT, "five"},
+		{token.ASSIGN, "="},
+		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "ten"},
+		{token.ASSIGN, "="},
+		{token.INT, "10"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "add"},
+		{token.ASSIGN, "="},
+		{token.FUNCTION, "fn"},
+		{token.LPAREN, "("},
+		{token.IDENT, "x"},
+		{token.COMMA, ","},
+		{token.IDENT, "y"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.IDENT, "x"},
+		{token.PLUS, "+"},
+		{token.IDENT, "y"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "result"},
+		{token.ASSIGN, "="},
+		{token.IDENT, "add"},
+		{token.LPAREN, "("},
+		{token.IDENT, "five"},
+		{token.COMMA, ","},
+		{token.IDENT, "ten"},
+		{token.RPAREN, ")"},
+		{token.SEMICOLON, ";"},
+	}
+
+	testLexer(t, input, tests)
+}
+
+func testLexer(t *testing.T, input string, tests []lexerResult) {
+	t.Helper()
 	l := New(strings.NewReader(input))
 	for i, res := range tests {
 		isNext := l.Next()
