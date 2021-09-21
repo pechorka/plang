@@ -8,8 +8,7 @@ import (
 	"github.com/pechorka/plang/token"
 )
 
-func TestNextToken(t *testing.T) {
-
+func TestNext_basic(t *testing.T) {
 	input := `=+(){},;`
 	tests := []struct {
 		expectedType    token.Type
