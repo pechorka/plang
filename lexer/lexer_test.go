@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"io"
-	"strings"
 	"testing"
 
 	"github.com/pechorka/plang/token"
@@ -129,7 +128,7 @@ func TestNext_full(t *testing.T) {
 
 func TestNext_invalid(t *testing.T) {
 	input := `@let`
-	l := New(strings.NewReader(input))
+	l := NewFromString(input)
 
 	isNext := l.Next()
 	if isNext {
@@ -145,7 +144,7 @@ func TestNext_invalid(t *testing.T) {
 
 func testLexer(t *testing.T, input string, tests []lexerResult) {
 	t.Helper()
-	l := New(strings.NewReader(input))
+	l := NewFromString(input)
 	for i, res := range tests {
 		isNext := l.Next()
 		if !isNext {

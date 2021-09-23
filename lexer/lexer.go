@@ -25,6 +25,10 @@ func New(r io.Reader) *Lexer {
 	}
 }
 
+func NewFromString(in string) *Lexer {
+	return New(strings.NewReader(in))
+}
+
 func (l *Lexer) Next() bool {
 	var (
 		r   rune = ' '
