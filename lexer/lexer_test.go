@@ -85,7 +85,7 @@ func testLexer(t *testing.T, input string, tests []lexerResult) {
 	for i, res := range tests {
 		isNext := l.Next()
 		if !isNext {
-			t.Fatalf("next token should exist")
+			t.Fatalf("tests[%d] - next token should exist, but got err %v", i, l.Err())
 		}
 		tok := l.Token()
 		if tok.Type != res.expectedType {

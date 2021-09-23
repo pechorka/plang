@@ -3,8 +3,6 @@ package token
 type Type string
 
 const (
-	ILLEGAL Type = "ILLEGAL"
-
 	// Identifiers + literals
 	IDENT Type = "IDENT" // add, foobar, x, y, ...
 	INT   Type = "INT"   // 1343456
