@@ -79,6 +79,22 @@ let result = add(five, ten);
 	testLexer(t, input, tests)
 }
 
+func TestNext_invalid(t *testing.T) {
+	input := `@let`
+	l := New(strings.NewReader(input))
+
+	isNext := l.Next()
+	if isNext {
+		t.Fatalf("next should be false")
+	}
+
+	err := l.Err()
+
+	if err != ErrInvalidToken {
+		t.Fatalf("error should %v, not the %v", ErrInvalidToken, err)
+	}
+}
+
 func testLexer(t *testing.T, input string, tests []lexerResult) {
 	t.Helper()
 	l := New(strings.NewReader(input))
