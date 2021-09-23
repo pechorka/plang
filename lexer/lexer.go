@@ -42,6 +42,8 @@ func (l *Lexer) Next() bool {
 		l.t = l.newToken(token.ASSIGN, r)
 	case '+':
 		l.t = l.newToken(token.PLUS, r)
+	case '-':
+		l.t = l.newToken(token.MINUS, r)
 	case ',':
 		l.t = l.newToken(token.COMMA, r)
 	case ';':
@@ -54,6 +56,16 @@ func (l *Lexer) Next() bool {
 		l.t = l.newToken(token.LBRACE, r)
 	case '}':
 		l.t = l.newToken(token.RBRACE, r)
+	case '!':
+		l.t = l.newToken(token.BANG, r)
+	case '*':
+		l.t = l.newToken(token.ASTERISK, r)
+	case '/':
+		l.t = l.newToken(token.SLASH, r)
+	case '<':
+		l.t = l.newToken(token.LT, r)
+	case '>':
+		l.t = l.newToken(token.GT, r)
 	default:
 		l.t, err = l.multiRuneToken(r)
 		if err != nil {

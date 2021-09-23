@@ -7,8 +7,14 @@ const (
 	IDENT Type = "IDENT" // add, foobar, x, y, ...
 	INT   Type = "INT"   // 1343456
 	// Operators
-	ASSIGN Type = "="
-	PLUS   Type = "+"
+	ASSIGN   Type = "="
+	PLUS     Type = "+"
+	MINUS         = "-"
+	BANG          = "!"
+	ASTERISK      = "*"
+	SLASH         = "/"
+	LT            = "<"
+	GT            = ">"
 	// Delimiters
 	COMMA     Type = ","
 	SEMICOLON Type = ";"
