@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/pechorka/plang/token"
 )
@@ -39,7 +40,14 @@ func (l *Lexer) Next() bool {
 
 	switch r {
 	case '=':
-		l.t = l.newToken(token.ASSIGN, r)
+		switch l.peekCharRune() {
+		case '=':
+			l.t.Type = token.EQ
+			l.t.Literal = "=="
+			l.skipRune()
+		default:
+			l.t = l.newToken(token.ASSIGN, r)
+		}
 	case '+':
 		l.t = l.newToken(token.PLUS, r)
 	case '-':
@@ -57,7 +65,14 @@ func (l *Lexer) Next() bool {
 	case '}':
 		l.t = l.newToken(token.RBRACE, r)
 	case '!':
-		l.t = l.newToken(token.BANG, r)
+		switch l.peekCharRune() {
+		case '=':
+			l.t.Type = token.NOT_EQ
+			l.t.Literal = "!="
+			l.skipRune()
+		default:
+			l.t = l.newToken(token.BANG, r)
+		}
 	case '*':
 		l.t = l.newToken(token.ASTERISK, r)
 	case '/':
@@ -93,6 +108,21 @@ func (l *Lexer) readRune() (rune, error) {
 
 func (l *Lexer) unreadRune() {
 	l.r.UnreadRune()
+}
+
+func (l *Lexer) peekCharRune() rune {
+	b, err := l.r.Peek(1)
+	if err != nil {
+		return 0
+	}
+
+	r, _ := utf8.DecodeRune(b)
+
+	return r
+}
+
+func (l *Lexer) skipRune() {
+	l.readRune()
 }
 
 func (l *Lexer) newToken(tt token.Type, literal rune) token.Token {
