@@ -149,6 +149,16 @@ func lookupIdentType(ident string) token.Type {
 		return token.FUNCTION
 	case "let":
 		return token.LET
+	case "if":
+		return token.IF
+	case "else":
+		return token.ELSE
+	case "true":
+		return token.TRUE
+	case "false":
+		return token.FALSE
+	case "return":
+		return token.RETURN
 	default:
 		return token.IDENT
 	}

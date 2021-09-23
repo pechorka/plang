@@ -26,6 +26,11 @@ const (
 	// Keywords
 	FUNCTION Type = "FUNCTION"
 	LET      Type = "LET"
+	TRUE          = "TRUE"
+	FALSE         = "FALSE"
+	IF            = "IF"
+	ELSE          = "ELSE"
+	RETURN        = "RETURN"
 )
 
 type Token struct {
