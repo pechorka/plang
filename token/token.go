@@ -3,6 +3,8 @@ package token
 type Type string
 
 const (
+	EOF     Type = "EOF"
+	INVALID Type = "INVALID"
 	// Identifiers + literals
 	IDENT Type = "IDENT" // add, foobar, x, y, ...
 	INT   Type = "INT"   // 1343456

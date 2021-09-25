@@ -3,9 +3,11 @@ package repl
 import (
 	"bufio"
 	"fmt"
+
 	"io"
 
 	"github.com/pechorka/plang/lexer"
+	"github.com/pechorka/plang/token"
 )
 
 const PROMPT = ">> "
@@ -20,11 +22,8 @@ func Start(r io.Reader, w io.Writer) {
 		}
 		line := scanner.Text()
 		l := lexer.NewFromString(line)
-		for l.Next() {
-			fmt.Fprintf(w, "%+v\n", l.Token())
-		}
-		if l.Err() != io.EOF {
-			fmt.Fprintf(w, "unxpected error while reading input: %v", l.Err())
+		for tok := l.Next(); tok.Type != token.EOF; tok = l.Next() {
+			fmt.Fprintf(w, "%+v\n", tok)
 		}
 	}
 }

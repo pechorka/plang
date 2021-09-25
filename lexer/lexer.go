@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"bufio"
-	"errors"
 	"io"
 	"strings"
 	"unicode"
@@ -11,170 +10,141 @@ import (
 	"github.com/pechorka/plang/token"
 )
 
-var ErrInvalidToken = errors.New("invalid token")
-
 type Lexer struct {
-	r   bufio.Reader
-	t   token.Token
-	err error
+	r           bufio.Reader
+	currentRune rune
+	nextRune    rune
 }
 
 func New(r io.Reader) *Lexer {
-	return &Lexer{
+	l := &Lexer{
 		r: *bufio.NewReader(r),
 	}
+	l.readRune()
+	l.readRune()
+	return l
 }
 
 func NewFromString(in string) *Lexer {
 	return New(strings.NewReader(in))
 }
 
-func (l *Lexer) Next() bool {
-	var (
-		r   rune = ' '
-		err error
-	)
-	for unicode.IsSpace(r) { // to skip whitespace
-		r, err = l.readRune()
-		if err != nil {
-			l.err = err
-			return false
-		}
-	}
+func (l *Lexer) Next() (tok token.Token) {
+	l.skipWhitespace()
 
-	switch r {
+	switch l.currentRune {
 	case '=':
-		switch l.peekCharRune() {
+		switch l.nextRune {
 		case '=':
-			l.t.Type = token.EQ
-			l.t.Literal = "=="
-			l.skipRune()
+			tok.Type = token.EQ
+			tok.Literal = "=="
+			l.readRune() // skip picked rune
 		default:
-			l.t = l.newToken(token.ASSIGN, r)
+			tok = l.newToken(token.ASSIGN)
 		}
 	case '+':
-		l.t = l.newToken(token.PLUS, r)
+		tok = l.newToken(token.PLUS)
 	case '-':
-		l.t = l.newToken(token.MINUS, r)
+		tok = l.newToken(token.MINUS)
 	case ',':
-		l.t = l.newToken(token.COMMA, r)
+		tok = l.newToken(token.COMMA)
 	case ';':
-		l.t = l.newToken(token.SEMICOLON, r)
+		tok = l.newToken(token.SEMICOLON)
 	case '(':
-		l.t = l.newToken(token.LPAREN, r)
+		tok = l.newToken(token.LPAREN)
 	case ')':
-		l.t = l.newToken(token.RPAREN, r)
+		tok = l.newToken(token.RPAREN)
 	case '{':
-		l.t = l.newToken(token.LBRACE, r)
+		tok = l.newToken(token.LBRACE)
 	case '}':
-		l.t = l.newToken(token.RBRACE, r)
+		tok = l.newToken(token.RBRACE)
 	case '!':
-		switch l.peekCharRune() {
+		switch l.nextRune {
 		case '=':
-			l.t.Type = token.NOT_EQ
-			l.t.Literal = "!="
-			l.skipRune()
+			tok.Type = token.NOT_EQ
+			tok.Literal = "!="
+			l.readRune()
 		default:
-			l.t = l.newToken(token.BANG, r)
+			tok = l.newToken(token.BANG)
 		}
 	case '*':
-		l.t = l.newToken(token.ASTERISK, r)
+		tok = l.newToken(token.ASTERISK)
 	case '/':
-		l.t = l.newToken(token.SLASH, r)
+		tok = l.newToken(token.SLASH)
 	case '<':
-		l.t = l.newToken(token.LT, r)
+		tok = l.newToken(token.LT)
 	case '>':
-		l.t = l.newToken(token.GT, r)
+		tok = l.newToken(token.GT)
+	case 0:
+		tok.Type = token.EOF
+	case utf8.RuneError:
+		tok = l.newToken(token.INVALID)
 	default:
-		l.t, err = l.multiRuneToken(r)
-		if err != nil {
-			l.err = err
-			return false
-		}
+		return l.multiRuneToken() // return early to avoid l.readRune()
 	}
 
-	return true
-}
-
-func (l *Lexer) Token() token.Token {
-	return l.t
-}
-
-func (l *Lexer) Err() error {
-	return l.err
-}
-
-func (l *Lexer) readRune() (rune, error) {
-	r, _, err := l.r.ReadRune()
-	// fmt.Printf("rune %d, strrune(%s), error %v\n", r, string(r), err)
-	return r, err
-}
-
-func (l *Lexer) unreadRune() {
-	l.r.UnreadRune()
-}
-
-func (l *Lexer) peekCharRune() rune {
-	b, err := l.r.Peek(1)
-	if err != nil {
-		return 0
-	}
-
-	r, _ := utf8.DecodeRune(b)
-
-	return r
-}
-
-func (l *Lexer) skipRune() {
 	l.readRune()
+
+	return tok
 }
 
-func (l *Lexer) newToken(tt token.Type, literal rune) token.Token {
+func (l *Lexer) readRune() {
+	l.currentRune = l.nextRune
+	var err error
+	l.nextRune, _, err = l.r.ReadRune() // TODO handle error
+	if err == io.EOF {
+		l.nextRune = 0
+	}
+}
+
+func (l *Lexer) peekRune() rune {
+	return l.nextRune
+}
+
+func (l *Lexer) skipWhitespace() {
+	for unicode.IsSpace(l.currentRune) {
+		l.readRune()
+	}
+}
+
+func (l *Lexer) newToken(tt token.Type) token.Token {
 	return token.Token{
 		Type:    tt,
-		Literal: string(literal),
+		Literal: string(l.currentRune),
 	}
 }
 
-func (l *Lexer) multiRuneToken(r rune) (t token.Token, err error) {
+func (l *Lexer) multiRuneToken() token.Token {
 	switch {
-	case isLetter(r):
-		return l.readIdent(r)
-	case unicode.IsDigit(r):
-		return l.readNumber(r)
+	case isLetter(l.currentRune):
+		return l.readIdent()
+	case unicode.IsDigit(l.currentRune):
+		return l.readNumber()
 	default:
-		return t, ErrInvalidToken
+		return l.newToken(token.INVALID)
 	}
 }
 
-func (l *Lexer) readIdent(r rune) (t token.Token, err error) {
+func (l *Lexer) readIdent() (tok token.Token) {
 	var buf strings.Builder
-	for isLetter(r) {
-		buf.WriteRune(r)
-		r, err = l.readRune()
-		if err != nil {
-			return t, err
-		}
+	for isLetter(l.currentRune) {
+		buf.WriteRune(l.currentRune)
+		l.readRune()
 	}
-	l.unreadRune()
-	t.Literal = buf.String()
-	t.Type = lookupIdentType(t.Literal)
-	return t, nil
+	tok.Literal = buf.String()
+	tok.Type = lookupIdentType(tok.Literal)
+	return tok
 }
 
-func (l *Lexer) readNumber(r rune) (t token.Token, err error) {
+func (l *Lexer) readNumber() (tok token.Token) {
 	var buf strings.Builder
-	for unicode.IsDigit(r) {
-		buf.WriteRune(r)
-		r, err = l.readRune()
-		if err != nil {
-			return t, err
-		}
+	for unicode.IsDigit(l.currentRune) {
+		buf.WriteRune(l.currentRune)
+		l.readRune()
 	}
-	l.unreadRune()
-	t.Literal = buf.String()
-	t.Type = token.INT
-	return t, nil
+	tok.Literal = buf.String()
+	tok.Type = token.INT
+	return tok
 }
 
 func lookupIdentType(ident string) token.Type {

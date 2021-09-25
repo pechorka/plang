@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"io"
 	"testing"
 
 	"github.com/pechorka/plang/token"
@@ -23,6 +22,7 @@ func TestNext_basic(t *testing.T) {
 		{token.RBRACE, "}"},
 		{token.COMMA, ","},
 		{token.SEMICOLON, ";"},
+		{token.EOF, ""},
 	}
 
 	testLexer(t, input, tests)
@@ -112,7 +112,6 @@ func TestNext_full(t *testing.T) {
 		{token.FALSE, "false"},
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
-
 		{token.INT, "10"},
 		{token.EQ, "=="},
 		{token.INT, "10"},
@@ -121,6 +120,7 @@ func TestNext_full(t *testing.T) {
 		{token.NOT_EQ, "!="},
 		{token.INT, "9"},
 		{token.SEMICOLON, ";"},
+		{token.EOF, ""},
 	}
 
 	testLexer(t, input, tests)
@@ -130,15 +130,9 @@ func TestNext_invalid(t *testing.T) {
 	input := `@let`
 	l := NewFromString(input)
 
-	isNext := l.Next()
-	if isNext {
-		t.Fatalf("next should be false")
-	}
-
-	err := l.Err()
-
-	if err != ErrInvalidToken {
-		t.Fatalf("error should %v, not the %v", ErrInvalidToken, err)
+	tok := l.Next()
+	if tok.Type != token.INVALID {
+		t.Fatalf("token should be %s, instead got %s", token.INVALID, tok.Type)
 	}
 }
 
@@ -146,11 +140,7 @@ func testLexer(t *testing.T, input string, tests []lexerResult) {
 	t.Helper()
 	l := NewFromString(input)
 	for i, res := range tests {
-		isNext := l.Next()
-		if !isNext {
-			t.Fatalf("tests[%d] - next token should exist, but got err %v", i, l.Err())
-		}
-		tok := l.Token()
+		tok := l.Next()
 		if tok.Type != res.expectedType {
 			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
 				i, res.expectedType, tok.Type)
@@ -159,19 +149,5 @@ func testLexer(t *testing.T, input string, tests []lexerResult) {
 			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
 				i, res.expectedLiteral, tok.Literal)
 		}
-	}
-
-	isNext := l.Next()
-	if isNext {
-		t.Fatalf("should be no next token")
-	}
-
-	err := l.Err()
-	switch err {
-	case nil:
-		t.Fatalf("should be io.EOF")
-	case io.EOF:
-	default:
-		t.Fatalf("enexpected error %v", err)
 	}
 }
