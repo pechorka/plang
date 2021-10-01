@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/pechorka/plang/ast"
 	"github.com/pechorka/plang/lexer"
 	"github.com/pechorka/plang/token"
@@ -10,6 +12,7 @@ type Parser struct {
 	l         *lexer.Lexer
 	curToken  token.Token
 	nextToken token.Token
+	errors    []string
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -22,11 +25,6 @@ func New(l *lexer.Lexer) *Parser {
 	return p
 }
 
-func (p *Parser) readToken() {
-	p.curToken = p.nextToken
-	p.nextToken = p.l.Next()
-}
-
 func (p *Parser) Parse() *ast.Program {
 	var prog ast.Program
 	for p.curToken.Type != token.EOF {
@@ -37,6 +35,15 @@ func (p *Parser) Parse() *ast.Program {
 		p.readToken()
 	}
 	return &prog
+}
+
+func (p *Parser) Errors() []string {
+	return p.errors
+}
+
+func (p *Parser) readToken() {
+	p.curToken = p.nextToken
+	p.nextToken = p.l.Next()
 }
 
 func (p *Parser) parseStatement() ast.Statement {
@@ -67,8 +74,8 @@ func (p *Parser) parseLetStatement() ast.Statement {
 	}
 
 	// TODO: add value parsing
-	for p.curToken.Type != token.SEMICOLON {
-		p.readToken()
+	if !p.skipUntilSemicolon() {
+		return nil
 	}
 
 	return &stmt
@@ -79,6 +86,22 @@ func (p *Parser) isNextToken(tt token.Type) bool {
 		p.readToken()
 		return true
 	}
-
+	p.appendErrorf("expect next token to be %s, got %s instead", tt, p.nextToken.Type)
 	return false
+}
+
+func (p *Parser) skipUntilSemicolon() bool {
+	for p.curToken.Type != token.SEMICOLON && p.curToken.Type != token.EOF {
+		p.readToken()
+	}
+	if p.curToken.Type == token.EOF {
+		p.appendErrorf("no semicolon after statement")
+		return false
+	}
+
+	return true
+}
+
+func (p *Parser) appendErrorf(text string, args ...interface{}) {
+	p.errors = append(p.errors, fmt.Sprintf(text, args...))
 }

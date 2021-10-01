@@ -16,6 +16,7 @@ func TestLetStatements(t *testing.T) {
 	l := lexer.NewFromString(input)
 	p := New(l)
 	program := p.Parse()
+	checkParserErrors(t, p)
 	if program == nil {
 		t.Fatalf("ParseProgram() returned nil")
 	}
@@ -39,6 +40,25 @@ func TestLetStatements(t *testing.T) {
 	}
 
 }
+
+func TestLetStatementsError(t *testing.T) {
+	tests := []struct {
+		inputWithError string
+	}{
+		{"let"},
+		{"let x "},
+		{"let x = "},
+	}
+	for i, tt := range tests {
+		l := lexer.NewFromString(tt.inputWithError)
+		p := New(l)
+		p.Parse()
+		if len(p.Errors()) == 0 {
+			t.Fatalf("test[%d]: expected error", i)
+		}
+	}
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	t.Helper()
 	if s.TokenLiteral() != "let" {
@@ -60,4 +80,17 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 		return false
 	}
 	return true
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	t.Helper()
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+	t.Errorf("parser has %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
 }
