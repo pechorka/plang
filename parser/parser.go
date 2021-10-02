@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/pechorka/plang/ast"
 	"github.com/pechorka/plang/lexer"
@@ -12,10 +13,17 @@ import (
 const (
 	_ int = iota
 	LOWEST
+	EQUALS      // ==
+	LESSGREATER // > or <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -X or !X
+	CALL        // myFunction(X)
 )
 
 type (
 	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
 )
 type Parser struct {
 	l              *lexer.Lexer
@@ -23,6 +31,7 @@ type Parser struct {
 	nextToken      token.Token
 	errors         []string
 	prefixParseFns map[token.Type]prefixParseFn
+	infixParseFns  map[token.Type]infixParseFn
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -32,6 +41,7 @@ func New(l *lexer.Lexer) *Parser {
 	}
 
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 
 	// fill cur and next token
 	p.readToken()
@@ -133,7 +143,22 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
-	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	return &ast.Identifier{
+		Token: p.curToken,
+		Value: p.curToken.Literal,
+	}
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	val, err := strconv.ParseInt(p.curToken.Literal, 10, 64)
+	if err != nil {
+		p.appendErrorf("cant parse %q as 64-bit integer", p.curToken.Literal)
+		return nil
+	}
+	return &ast.IntegerLiteral{
+		Token: p.curToken,
+		Value: val,
+	}
 }
 
 func (p *Parser) isNextToken(tt token.Type) bool {
@@ -163,4 +188,7 @@ func (p *Parser) appendErrorf(text string, args ...interface{}) {
 
 func (p *Parser) registerPrefix(tokenType token.Type, fn prefixParseFn) {
 	p.prefixParseFns[tokenType] = fn
+}
+func (p *Parser) registerInfix(tokenType token.Type, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
 }
