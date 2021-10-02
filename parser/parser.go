@@ -42,6 +42,8 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.BANG, p.parsePrefixExpression)
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
 	// fill cur and next token
 	p.readToken()
@@ -144,8 +146,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.appendErrorf("no prefix func for %s token type", p.curToken.Type)
 		return nil
 	}
-	leftExp := prefix()
-	return leftExp
+	exp := prefix()
+	return exp
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
@@ -165,6 +167,22 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 		Token: p.curToken,
 		Value: val,
 	}
+}
+
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expr := ast.PrefixExpression{
+		Token:    p.curToken,
+		Operator: p.curToken.Literal,
+	}
+
+	p.readToken() // consume token, so parse expression will analyze next token
+
+	right := p.parseExpression(PREFIX)
+	if right == nil {
+		return nil
+	}
+	expr.Right = right
+	return &expr
 }
 
 func (p *Parser) isNextToken(tt token.Type) bool {
