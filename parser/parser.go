@@ -121,9 +121,14 @@ func (p *Parser) parseReturnStatement() ast.Statement {
 }
 
 func (p *Parser) parseExpressionStatement() ast.Statement {
+	exp := p.parseExpression(LOWEST)
+	if exp == nil {
+		return nil
+	}
+
 	stmt := ast.ExpressionStatement{
 		Token:      p.curToken,
-		Expression: p.parseExpression(LOWEST),
+		Expression: exp,
 	}
 
 	if p.nextToken.Type == token.SEMICOLON { // semicolon is optional
@@ -136,6 +141,7 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
+		p.appendErrorf("no prefix func for %s token type", p.curToken.Type)
 		return nil
 	}
 	leftExp := prefix()
