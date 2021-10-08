@@ -166,7 +166,9 @@ func (ie *InfixExpression) String() string {
 	var out bytes.Buffer
 	out.WriteString("(")
 	out.WriteString(ie.Left.String())
+	out.WriteString(" ")
 	out.WriteString(ie.Operator)
+	out.WriteString(" ")
 	out.WriteString(ie.Right.String())
 	out.WriteString(")")
 	return out.String()
