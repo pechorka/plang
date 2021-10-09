@@ -386,6 +386,58 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
+func TestIfExpression(t *testing.T) {
+	input := "if (x > y) { x }"
+
+	l := lexer.NewFromString(input)
+	p := New(l)
+	program := p.Parse()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program has not enough statements. got=%d",
+			len(program.Statements))
+	}
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0])
+	}
+
+	exp, ok := stmt.Expression.(*ast.IfExpression)
+	if !ok {
+		t.Fatalf("exp not *ast.IfExpression. got=%T", stmt.Expression)
+	}
+
+	if exp.TokenLiteral() != "if" {
+		t.Errorf("exp.TokenLiteral not %s. got=%s", "if",
+			exp.TokenLiteral())
+	}
+
+	if !testInfixExpression(t, exp.Condition, "x", ">", "y") {
+		return
+	}
+
+	if len(exp.Then.Statements) != 1 {
+		t.Errorf("exp.Then has not enough statements. got=%d",
+			len(exp.Then.Statements))
+	}
+
+	thenExprStmt, ok := exp.Then.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("exp.Then.Statements[0] not *ast.ExpressionStatement. got=%T",
+			stmt.Expression)
+	}
+
+	if !testIdentifier(t, thenExprStmt.Expression, "x") {
+		return
+	}
+
+	if exp.Else != nil {
+		t.Errorf("exp.Else was not nil, got=%T", exp.Else)
+	}
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
