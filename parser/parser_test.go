@@ -412,6 +412,48 @@ func TestIfElseExpression(t *testing.T) {
 	}
 }
 
+func TestFnExpression(t *testing.T) {
+	input := "fn(x, y) { x + y; }"
+
+	stmt := getExpressionStmt(t, input)
+
+	exp, ok := stmt.Expression.(*ast.FnExpression)
+	if !ok {
+		t.Fatalf("exp not *ast.FnExpression. got=%T", stmt.Expression)
+	}
+
+	if exp.TokenLiteral() != "fn" {
+		t.Errorf("exp.TokenLiteral not %s. got=%s", "fn",
+			exp.TokenLiteral())
+	}
+
+	if len(exp.Params) != 2 {
+		t.Fatalf("exp.Params has not %d identifiers. got=%d", 2, len(exp.Params))
+	}
+
+	if !testIdentifier(t, exp.Params[0], "x") {
+		return
+	}
+	if !testIdentifier(t, exp.Params[1], "y") {
+		return
+	}
+
+	if len(exp.Body.Statements) != 1 {
+		t.Fatalf("exp.Then has not enough statements. got=%d",
+			len(exp.Body.Statements))
+	}
+
+	sumExprStmt, ok := exp.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("exp.Body.Statements[0] not *ast.ExpressionStatement. got=%T",
+			stmt.Expression)
+	}
+
+	if !testInfixExpression(t, sumExprStmt.Expression, "x", "+", "y") {
+		return
+	}
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
