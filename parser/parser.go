@@ -277,7 +277,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	ifExp.Then = p.parseBlockStatement()
 
-	if p.curToken.Type != token.ELSE {
+	if p.curToken.Type == token.ELSE {
 		if !p.isNextToken(token.LBRACE) {
 			p.appendErrorf("invalid if expression: no { after else")
 			return nil
