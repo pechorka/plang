@@ -186,3 +186,49 @@ func (ie *InfixExpression) String() string {
 	out.WriteString(")")
 	return out.String()
 }
+
+type BlockStatement struct {
+	Token      token.Token // the { token
+	Statements []Statement
+}
+
+func (bs *BlockStatement) statementNode() {}
+func (bs *BlockStatement) TokenLiteral() string {
+	return bs.Token.Literal
+}
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString("{ ")
+	for _, s := range bs.Statements {
+		out.WriteString(s.String())
+		if len(bs.Statements) > 1 {
+			out.WriteString(";")
+		}
+	}
+	out.WriteString(" }")
+	return out.String()
+}
+
+type IfExpression struct {
+	Token     token.Token
+	Condition Expression
+	Then      *BlockStatement
+	Else      *BlockStatement
+}
+
+func (ie *IfExpression) expressionNode() {}
+func (ie *IfExpression) TokenLiteral() string {
+	return ie.Token.Literal
+}
+func (ie *IfExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("if ")
+	out.WriteString(ie.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(ie.Then.String())
+	if ie.Else != nil {
+		out.WriteString("else ")
+		out.WriteString(ie.Else.String())
+	}
+	return out.String()
+}
