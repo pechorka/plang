@@ -258,15 +258,6 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	return exp
 }
 
-func (p *Parser) parseBlockExpression() ast.Expression {
-	p.readToken()
-	exp := p.parseExpression(LOWEST)
-	if !p.isNextToken(token.RPAREN) {
-		return nil
-	}
-	return exp
-}
-
 func (p *Parser) parseIfExpression() ast.Expression {
 	ifExp := ast.IfExpression{
 		Token: p.curToken,
@@ -286,7 +277,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	ifExp.Then = p.parseBlockStatement()
 
-	if p.curToken.Type == token.ELSE {
+	if p.curToken.Type != token.ELSE {
 		if !p.isNextToken(token.LBRACE) {
 			p.appendErrorf("invalid if expression: no { after else")
 			return nil
