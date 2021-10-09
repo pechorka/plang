@@ -419,7 +419,7 @@ func TestIfExpression(t *testing.T) {
 	}
 
 	if len(exp.Then.Statements) != 1 {
-		t.Errorf("exp.Then has not enough statements. got=%d",
+		t.Fatalf("exp.Then has not enough statements. got=%d",
 			len(exp.Then.Statements))
 	}
 

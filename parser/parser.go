@@ -58,6 +58,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FALSE, p.parseBooleanLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
+	p.registerPrefix(token.IF, p.parseIfExpression)
 
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -67,8 +69,6 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
-
-	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 
 	// fill cur and next token
 	p.readToken()
@@ -256,6 +256,65 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 		return nil
 	}
 	return exp
+}
+
+func (p *Parser) parseBlockExpression() ast.Expression {
+	p.readToken()
+	exp := p.parseExpression(LOWEST)
+	if !p.isNextToken(token.RPAREN) {
+		return nil
+	}
+	return exp
+}
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	ifExp := ast.IfExpression{
+		Token: p.curToken,
+	}
+
+	if !p.isNextToken(token.LPAREN) {
+		p.appendErrorf("invalid if expression: no ( after if")
+		return nil
+	}
+
+	ifExp.Condition = p.parseExpression(LOWEST)
+
+	if !p.isNextToken(token.LBRACE) {
+		p.appendErrorf("invalid if expression: no { after condition")
+		return nil
+	}
+
+	ifExp.Then = p.parseBlockStatement()
+
+	if p.curToken.Type != token.ELSE {
+		return &ifExp
+	}
+
+	if !p.isNextToken(token.LBRACE) {
+		p.appendErrorf("invalid if expression: no { after else")
+		return nil
+	}
+
+	ifExp.Else = p.parseBlockStatement()
+
+	return &ifExp
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	blockStmt := ast.BlockStatement{
+		Token: p.curToken,
+	}
+
+	p.readToken() // consume token.LBRACE
+
+	for p.curToken.Type != token.RBRACE {
+		blockStmt.Statements = append(blockStmt.Statements, p.parseStatement())
+		p.readToken()
+	}
+
+	p.readToken() // consume token.RBRACE
+
+	return &blockStmt
 }
 
 func (p *Parser) isNextToken(tt token.Type) bool {
