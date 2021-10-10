@@ -168,7 +168,7 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
-		p.appendErrorf("no prefix func for %s token type", p.curToken.Type)
+		p.appendErrorf("no prefix func for %q token type", p.curToken.Type)
 		return nil
 	}
 	leftExp := prefix()
@@ -314,7 +314,7 @@ func (p *Parser) isNextToken(tt token.Type) bool {
 		p.readToken()
 		return true
 	}
-	p.appendErrorf("expect next token to be %s, got %s instead", tt, p.nextToken.Type)
+	p.appendErrorf("expect next token to be %q, got %q instead", tt, p.nextToken.Type)
 	return false
 }
 
