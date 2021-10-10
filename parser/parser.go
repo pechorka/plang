@@ -30,6 +30,7 @@ var precedences = map[token.Type]int{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.LPAREN:   CALL,
 }
 
 type (
@@ -70,6 +71,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
+	p.registerInfix(token.LPAREN, p.parseCallExpression)
 
 	// fill cur and next token
 	p.readToken()
@@ -338,25 +340,56 @@ func (p *Parser) parseFnParams() []*ast.Identifier {
 		return nil
 	}
 
+	p.readToken() // consume left parenthesis
+
 	var params []*ast.Identifier
-	for p.nextToken.Type == token.IDENT {
+	ident := p.parseIdentifier().(*ast.Identifier)
+	params = append(params, ident)
+	for p.nextToken.Type == token.COMMA {
+		p.readToken()
 		p.readToken()
 		ident := p.parseIdentifier().(*ast.Identifier)
 		params = append(params, ident)
-
-		switch p.nextToken.Type {
-		case token.COMMA:
-			p.readToken()
-		case token.RPAREN: // exit from loop
-		default:
-			p.appendErrorf("wrong token after fn param: %q", p.nextToken.Literal)
-			return nil
-		}
 	}
 
-	p.readToken() // consume right parenthesis
+	if !p.isNextToken(token.RPAREN) {
+		p.appendErrorf("expected right parenthesis after fn params")
+		return nil
+	}
 
 	return params
+}
+
+func (p *Parser) parseCallExpression(left ast.Expression) ast.Expression {
+	callExp := ast.CallExpression{
+		Token:    p.curToken,
+		Function: left,
+	}
+	callExp.Arguments = p.parseCallArguments()
+	return &callExp
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	if p.nextToken.Type == token.RPAREN { // empty arg list
+		p.readToken()
+		return nil
+	}
+	p.readToken() // consume left parenthesis
+
+	var args []ast.Expression
+	args = append(args, p.parseExpression(LOWEST))
+	for p.nextToken.Type == token.COMMA {
+		p.readToken()
+		p.readToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.isNextToken(token.RPAREN) {
+		p.appendErrorf("expected right parenthesis after call arguments")
+		return nil
+	}
+
+	return args
 }
 
 func (p *Parser) isNextToken(tt token.Type) bool {

@@ -256,3 +256,27 @@ func (fe *FnExpression) String() string {
 	out.WriteString(fe.Body.String())
 	return out.String()
 }
+
+type CallExpression struct {
+	Token     token.Token // The '(' token
+	Function  Expression  // Identifier or FunctionLiteral
+	Arguments []Expression
+}
+
+func (ce *CallExpression) expressionNode() {}
+func (ce *CallExpression) TokenLiteral() string {
+	return ce.Token.Literal
+}
+func (ce *CallExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(ce.Function.String())
+	out.WriteString("(")
+	for i, arg := range ce.Arguments {
+		if i > 0 {
+			out.WriteString(", ")
+		}
+		out.WriteString(arg.String())
+	}
+	out.WriteString(")")
+	return out.String()
+}
