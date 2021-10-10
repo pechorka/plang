@@ -60,6 +60,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
+	p.registerPrefix(token.FUNCTION, p.parseFnExpression)
 
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -307,6 +308,50 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	p.readToken() // consume token.RBRACE
 
 	return &blockStmt
+}
+
+func (p *Parser) parseFnExpression() ast.Expression {
+	fnExpr := ast.FnExpression{
+		Token: p.curToken,
+	}
+
+	if !p.isNextToken(token.LPAREN) {
+		p.appendErrorf("invalid fn expression: no ( after fn")
+		return nil
+	}
+
+	for p.nextToken.Type == token.IDENT && p.curToken.Type != token.EOF {
+		p.readToken()
+
+		identExpr := p.parseExpression(LOWEST)
+		ident, ok := identExpr.(*ast.Identifier)
+		if !ok {
+			p.appendErrorf("not an identifier in fn param list, got %s", identExpr.TokenLiteral())
+			return nil
+		}
+		fnExpr.Params = append(fnExpr.Params, ident)
+
+		if p.nextToken.Type == token.RPAREN {
+			p.readToken()
+			break
+		}
+
+		switch p.nextToken.Type {
+		case token.COMMA:
+			p.readToken()
+		default:
+			p.appendErrorf("not comma or right parenthesis after identifier in fn param list, got %q", p.nextToken.Literal)
+		}
+	}
+
+	if !p.isNextToken(token.LBRACE) {
+		p.appendErrorf("invalid fn expression: no { after param list")
+		return nil
+	}
+
+	fnExpr.Body = p.parseBlockStatement()
+
+	return &fnExpr
 }
 
 func (p *Parser) isNextToken(tt token.Type) bool {
