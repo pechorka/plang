@@ -130,7 +130,10 @@ func (p *Parser) parseLetStatement() ast.Statement {
 		return nil
 	}
 
-	// TODO: add value parsing
+	p.readToken() // consume =
+
+	stmt.Value = p.parseExpression(LOWEST)
+
 	if !p.skipUntilSemicolon() {
 		return nil
 	}
@@ -142,6 +145,10 @@ func (p *Parser) parseReturnStatement() ast.Statement {
 	stmt := ast.ReturnStatement{
 		Token: p.curToken,
 	}
+
+	p.readToken() // consume return
+
+	stmt.Value = p.parseExpression(LOWEST)
 
 	if !p.skipUntilSemicolon() {
 		return nil

@@ -16,6 +16,7 @@ func TestLetStatements(t *testing.T) {
 		expectedValue      interface{}
 	}{
 		{"let x = 5;", "x", 5},
+		{"let y = true;", "y", true},
 		{"let foobar = y;", "foobar", "y"},
 	}
 
@@ -35,7 +36,10 @@ func TestLetStatements(t *testing.T) {
 			return
 		}
 
-		// TODO test value
+		val := stmt.(*ast.LetStatement).Value
+		if !testLiteralExpression(t, val, tt.expectedValue) {
+			return
+		}
 	}
 }
 
@@ -63,6 +67,7 @@ func TestReturnStatements(t *testing.T) {
 		expectedValue interface{}
 	}{
 		{"return 5;", 5},
+		{"return true;", true},
 		{"return foobar;", "foobar"},
 	}
 
@@ -87,7 +92,9 @@ func TestReturnStatements(t *testing.T) {
 				returnStmt.TokenLiteral())
 		}
 
-		// TODO test value
+		if !testLiteralExpression(t, returnStmt.Value, tt.expectedValue) {
+			return
+		}
 	}
 }
 
