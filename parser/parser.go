@@ -320,29 +320,7 @@ func (p *Parser) parseFnExpression() ast.Expression {
 		return nil
 	}
 
-	for p.nextToken.Type == token.IDENT && p.curToken.Type != token.EOF {
-		p.readToken()
-
-		identExpr := p.parseExpression(LOWEST)
-		ident, ok := identExpr.(*ast.Identifier)
-		if !ok {
-			p.appendErrorf("not an identifier in fn param list, got %s", identExpr.TokenLiteral())
-			return nil
-		}
-		fnExpr.Params = append(fnExpr.Params, ident)
-
-		if p.nextToken.Type == token.RPAREN {
-			p.readToken()
-			break
-		}
-
-		switch p.nextToken.Type {
-		case token.COMMA:
-			p.readToken()
-		default:
-			p.appendErrorf("not comma or right parenthesis after identifier in fn param list, got %q", p.nextToken.Literal)
-		}
-	}
+	fnExpr.Params = p.parseFnParams()
 
 	if !p.isNextToken(token.LBRACE) {
 		p.appendErrorf("invalid fn expression: no { after param list")
@@ -352,6 +330,33 @@ func (p *Parser) parseFnExpression() ast.Expression {
 	fnExpr.Body = p.parseBlockStatement()
 
 	return &fnExpr
+}
+
+func (p *Parser) parseFnParams() []*ast.Identifier {
+	if p.nextToken.Type == token.RPAREN { // empty param list
+		p.readToken()
+		return nil
+	}
+
+	var params []*ast.Identifier
+	for p.nextToken.Type == token.IDENT {
+		p.readToken()
+		ident := p.parseIdentifier().(*ast.Identifier)
+		params = append(params, ident)
+
+		switch p.nextToken.Type {
+		case token.COMMA:
+			p.readToken()
+		case token.RPAREN: // exit from loop
+		default:
+			p.appendErrorf("wrong token after fn param: %q", p.nextToken.Literal)
+			return nil
+		}
+	}
+
+	p.readToken() // consume right parenthesis
+
+	return params
 }
 
 func (p *Parser) isNextToken(tt token.Type) bool {

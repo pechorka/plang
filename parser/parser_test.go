@@ -454,6 +454,41 @@ func TestFnExpression(t *testing.T) {
 	}
 }
 
+func TestFnParamsParsing(t *testing.T) {
+	tests := []struct {
+		name           string
+		input          string
+		expectedParams []string
+	}{
+		{name: "empty params", input: "fn() {};", expectedParams: []string{}},
+		{name: "single param", input: "fn(x) {};", expectedParams: []string{"x"}},
+		{name: "multiple params", input: "fn(x, y, z) {};", expectedParams: []string{"x", "y", "z"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stmt := getExpressionStmt(t, tt.input)
+
+			exp, ok := stmt.Expression.(*ast.FnExpression)
+			if !ok {
+				t.Fatalf("exp not *ast.FnExpression. got=%T", stmt.Expression)
+			}
+
+			if len(tt.expectedParams) != len(exp.Params) {
+				t.Fatalf("wrong param list len: expected %d, got %d",
+					len(tt.expectedParams), len(exp.Params))
+			}
+
+			for i, param := range exp.Params {
+				if !testIdentifier(t, param, tt.expectedParams[i]) {
+					return
+				}
+			}
+		})
+	}
+
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
