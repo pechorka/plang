@@ -134,9 +134,7 @@ func (p *Parser) parseLetStatement() ast.Statement {
 
 	stmt.Value = p.parseExpression(LOWEST)
 
-	if !p.skipUntilSemicolon() {
-		return nil
-	}
+	p.skipUntilSemicolon()
 
 	return &stmt
 }
@@ -150,9 +148,7 @@ func (p *Parser) parseReturnStatement() ast.Statement {
 
 	stmt.Value = p.parseExpression(LOWEST)
 
-	if !p.skipUntilSemicolon() {
-		return nil
-	}
+	p.skipUntilSemicolon()
 
 	return &stmt
 }
@@ -408,16 +404,10 @@ func (p *Parser) isNextToken(tt token.Type) bool {
 	return false
 }
 
-func (p *Parser) skipUntilSemicolon() bool {
+func (p *Parser) skipUntilSemicolon() {
 	for p.curToken.Type != token.SEMICOLON && p.curToken.Type != token.EOF {
 		p.readToken()
 	}
-	if p.curToken.Type == token.EOF {
-		p.appendErrorf("no semicolon after statement")
-		return false
-	}
-
-	return true
 }
 
 func (p *Parser) appendErrorf(text string, args ...interface{}) {

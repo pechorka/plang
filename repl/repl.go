@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"github.com/pechorka/plang/lexer"
-	"github.com/pechorka/plang/token"
+	"github.com/pechorka/plang/parser"
 )
 
 const PROMPT = ">> "
@@ -22,8 +22,20 @@ func Start(r io.Reader, w io.Writer) {
 		}
 		line := scanner.Text()
 		l := lexer.NewFromString(line)
-		for tok := l.Next(); tok.Type != token.EOF; tok = l.Next() {
-			fmt.Fprintf(w, "%+v\n", tok)
+		p := parser.New(l)
+
+		program := p.Parse()
+		if len(p.Errors()) != 0 {
+			printParserErrors(w, p.Errors())
+			continue
 		}
+		io.WriteString(w, program.String())
+		io.WriteString(w, "\n")
+	}
+}
+
+func printParserErrors(w io.Writer, errors []string) {
+	for _, msg := range errors {
+		io.WriteString(w, "\t"+msg+"\n")
 	}
 }
