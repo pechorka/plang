@@ -6,6 +6,7 @@ import (
 
 	"io"
 
+	"github.com/pechorka/plang/evaluator"
 	"github.com/pechorka/plang/lexer"
 	"github.com/pechorka/plang/parser"
 )
@@ -29,8 +30,11 @@ func Start(r io.Reader, w io.Writer) {
 			printParserErrors(w, p.Errors())
 			continue
 		}
-		io.WriteString(w, program.String())
-		io.WriteString(w, "\n")
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			io.WriteString(w, evaluated.Inspect())
+			io.WriteString(w, "\n")
+		}
 	}
 }
 
