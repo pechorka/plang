@@ -15,16 +15,18 @@ func Eval(node ast.Node) object.Object {
 	switch n := node.(type) {
 	case *ast.Program:
 		return evalStatements(n.Statements)
+	case *ast.BlockStatement:
+		return evalStatements(n.Statements)
 	case *ast.ExpressionStatement:
 		return Eval(n.Expression)
 	case *ast.PrefixExpression:
 		return evalPrefixExpression(n)
 	case *ast.InfixExpression:
 		return evalInfixExpression(n)
+	case *ast.IfExpression:
+		return evalIfExpression(n)
 	case *ast.IntegerLiteral:
-		return &object.Integer{
-			Value: n.Value,
-		}
+		return &object.Integer{Value: n.Value}
 	case *ast.Boolean:
 		return boolToBooleanObject(n.Value)
 	}
@@ -65,6 +67,18 @@ func evalInfixExpression(infix *ast.InfixExpression) object.Object {
 	default:
 		return NULL
 	}
+}
+
+func evalIfExpression(ifExpr *ast.IfExpression) object.Object {
+	cond := Eval(ifExpr.Condition)
+	if isTruthy(cond) {
+		return Eval(ifExpr.Then)
+	}
+	if ifExpr.Else != nil {
+		return Eval(ifExpr.Else)
+	}
+
+	return NULL
 }
 
 func evalBangExpression(right object.Object) object.Object {
@@ -122,4 +136,17 @@ func boolToBooleanObject(b bool) object.Object {
 	}
 
 	return FALSE
+}
+
+func isTruthy(obj object.Object) bool {
+	switch obj {
+	case NULL:
+		return false
+	case TRUE:
+		return true
+	case FALSE:
+		return false
+	default:
+		return true
+	}
 }
