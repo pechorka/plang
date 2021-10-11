@@ -9,6 +9,7 @@ type ObjectType string
 const (
 	INTEGER_OBJ ObjectType = "INTEGER"
 	BOOLEAN_OBJ ObjectType = "BOOLEAN"
+	NULL_OBJ    ObjectType = "NULL"
 )
 
 type Object interface {
@@ -38,4 +39,15 @@ func (i *Boolean) Inspect() string {
 
 func (i *Boolean) Type() ObjectType {
 	return BOOLEAN_OBJ
+}
+
+type Null struct {
+}
+
+func (i *Null) Inspect() string {
+	return "null"
+}
+
+func (i *Null) Type() ObjectType {
+	return NULL_OBJ
 }
