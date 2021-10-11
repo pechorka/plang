@@ -34,6 +34,10 @@ func Start(r io.Reader, w io.Writer) {
 		}
 		evaluated := evaluator.Eval(program, env)
 		if evaluated != nil {
+			// don't print functions
+			if _, ok := evaluated.(*object.Function); ok {
+				continue
+			}
 			io.WriteString(w, evaluated.Inspect())
 			io.WriteString(w, "\n")
 		}
