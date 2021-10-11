@@ -4,16 +4,16 @@ import (
 	"strconv"
 )
 
-type ObjectType string
+type Type string
 
 const (
-	INTEGER_OBJ ObjectType = "INTEGER"
-	BOOLEAN_OBJ ObjectType = "BOOLEAN"
-	NULL_OBJ    ObjectType = "NULL"
+	INTEGER_OBJ Type = "INTEGER"
+	BOOLEAN_OBJ Type = "BOOLEAN"
+	NULL_OBJ    Type = "NULL"
 )
 
 type Object interface {
-	Type() ObjectType
+	Type() Type
 	Inspect() string
 }
 
@@ -25,7 +25,7 @@ func (i *Integer) Inspect() string {
 	return strconv.FormatInt(i.Value, 10)
 }
 
-func (i *Integer) Type() ObjectType {
+func (i *Integer) Type() Type {
 	return INTEGER_OBJ
 }
 
@@ -37,7 +37,7 @@ func (i *Boolean) Inspect() string {
 	return strconv.FormatBool(i.Value)
 }
 
-func (i *Boolean) Type() ObjectType {
+func (i *Boolean) Type() Type {
 	return BOOLEAN_OBJ
 }
 
@@ -48,6 +48,6 @@ func (i *Null) Inspect() string {
 	return "null"
 }
 
-func (i *Null) Type() ObjectType {
+func (i *Null) Type() Type {
 	return NULL_OBJ
 }
