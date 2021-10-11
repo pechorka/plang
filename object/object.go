@@ -1,7 +1,10 @@
 package object
 
 import (
+	"bytes"
 	"strconv"
+
+	"github.com/pechorka/plang/ast"
 )
 
 type Type string
@@ -12,6 +15,7 @@ const (
 	NULL_OBJ         Type = "NULL"
 	RETURN_VALUE_OBJ Type = "RETURN_VALUE"
 	ERROR_OBJ        Type = "ERROR"
+	FUNCTION_OBJ          = "FUNCTION"
 )
 
 type Object interface {
@@ -93,4 +97,29 @@ func (e *Environment) Get(name string) (Object, bool) {
 func (e *Environment) Set(name string, val Object) Object {
 	e.store[name] = val
 	return val
+}
+
+type Function struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+	Env        *Environment
+}
+
+func (f *Function) Type() Type {
+	return FUNCTION_OBJ
+}
+func (f *Function) Inspect() string {
+	var out bytes.Buffer
+	out.WriteString("fn")
+	out.WriteString("(")
+	for i, p := range f.Parameters {
+		if i > 0 {
+			out.WriteString(", ")
+		}
+		out.WriteString(p.String())
+	}
+	out.WriteString(") {\n")
+	out.WriteString(f.Body.String())
+	out.WriteString("\n}")
+	return out.String()
 }
