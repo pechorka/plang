@@ -134,6 +134,24 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	}
 }
 
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"foobar";`
+
+	stmt := getExpressionStmt(t, input)
+
+	literal, ok := stmt.Expression.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("exp not *ast.StringLiteral. got=%T", stmt.Expression)
+	}
+	if literal.Value != "foobar" {
+		t.Errorf("literal.Value not %s. got=%s", "foobar", literal.Value)
+	}
+	if literal.TokenLiteral() != "foobar" {
+		t.Errorf("literal.TokenLiteral not %s. got=%s", "foobar",
+			literal.TokenLiteral())
+	}
+}
+
 func TestBooleanExpression(t *testing.T) {
 	tests := []struct {
 		input            string
