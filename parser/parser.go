@@ -63,6 +63,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFnExpression)
+	p.registerPrefix(token.LBRACKET, p.parseArrayExpression)
 
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -376,12 +377,22 @@ func (p *Parser) parseCallExpression(left ast.Expression) ast.Expression {
 		Token:    p.curToken,
 		Function: left,
 	}
-	callExp.Arguments = p.parseCallArguments()
+	callExp.Arguments = p.parseExpressionLists(token.RPAREN)
 	return &callExp
 }
 
-func (p *Parser) parseCallArguments() []ast.Expression {
-	if p.nextToken.Type == token.RPAREN { // empty arg list
+func (p *Parser) parseArrayExpression() ast.Expression {
+	arrExpr := ast.ArrayLiteral{
+		Token: p.curToken,
+	}
+
+	arrExpr.Elements = p.parseExpressionLists(token.RBRACKET)
+
+	return &arrExpr
+}
+
+func (p *Parser) parseExpressionLists(end token.Type) []ast.Expression {
+	if p.nextToken.Type == end { // empty expr list
 		p.readToken()
 		return nil
 	}
@@ -395,8 +406,8 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 		args = append(args, p.parseExpression(LOWEST))
 	}
 
-	if !p.isNextToken(token.RPAREN) {
-		p.appendErrorf("expected right parenthesis after call arguments")
+	if !p.isNextToken(end) {
+		p.appendErrorf("expected %s after expressions", end)
 		return nil
 	}
 
