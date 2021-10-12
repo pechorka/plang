@@ -75,6 +75,9 @@ func (l *Lexer) Next() (tok token.Token) {
 		tok = l.newToken(token.LT)
 	case '>':
 		tok = l.newToken(token.GT)
+	case '"':
+		l.readRune() // skip quote
+		tok = l.readString()
 	case 0:
 		tok.Type = token.EOF
 	case utf8.RuneError:
@@ -144,6 +147,17 @@ func (l *Lexer) readNumber() (tok token.Token) {
 	}
 	tok.Literal = buf.String()
 	tok.Type = token.INT
+	return tok
+}
+
+func (l *Lexer) readString() (tok token.Token) {
+	var buf strings.Builder
+	for l.currentRune != '"' && l.currentRune != 0 {
+		buf.WriteRune(l.currentRune)
+		l.readRune()
+	}
+	tok.Literal = buf.String()
+	tok.Type = token.STRING
 	return tok
 }
 
