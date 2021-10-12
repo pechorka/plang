@@ -38,13 +38,13 @@ func TestEvalIntegerExpression(t *testing.T) {
 func TestEvalStringLiteral(t *testing.T) {
 	input := `"foobar"`
 	evaluated := testEval(input)
-	str, ok := evaluated.(*object.String)
-	if !ok {
-		t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
-	}
-	if str.Value != "foobar" {
-		t.Errorf("String has wrong value. got=%q", str.Value)
-	}
+	testStringObject(t, evaluated, "foobar")
+}
+
+func TestStringConcatenation(t *testing.T) {
+	input := `"foo" + " " + "bar"`
+	evaluated := testEval(input)
+	testStringObject(t, evaluated, "foo bar")
 }
 
 func TestEvalBooleanExpression(t *testing.T) {
@@ -187,6 +187,10 @@ func TestErrorHandling(t *testing.T) {
 			"foobar",
 			"identifier not found: foobar",
 		},
+		{
+			`"Hello" - "World"`,
+			"unknown operator: STRING - STRING",
+		},
 	}
 
 	for _, tt := range tests {
@@ -283,6 +287,20 @@ func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 	}
 	if result.Value != expected {
 		t.Errorf("object has wrong value. got=%d, want=%d",
+			result.Value, expected)
+		return false
+	}
+	return true
+}
+
+func testStringObject(t *testing.T, obj object.Object, expected string) bool {
+	result, ok := obj.(*object.String)
+	if !ok {
+		t.Errorf("object is not String. got=%T (%+v)", obj, obj)
+		return false
+	}
+	if result.Value != expected {
+		t.Errorf("object has wrong value. got=%s, want=%s",
 			result.Value, expected)
 		return false
 	}
