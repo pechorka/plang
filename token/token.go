@@ -6,19 +6,20 @@ const (
 	EOF     Type = "EOF"
 	INVALID Type = "INVALID"
 	// Identifiers + literals
-	IDENT Type = "IDENT" // add, foobar, x, y, ...
-	INT   Type = "INT"   // 1343456
+	IDENT  Type = "IDENT" // add, foobar, x, y, ...
+	INT    Type = "INT"   // 1343456
+	STRING Type = "STRING"
 	// Operators
 	ASSIGN   Type = "="
 	PLUS     Type = "+"
-	MINUS         = "-"
-	BANG          = "!"
-	ASTERISK      = "*"
-	SLASH         = "/"
-	LT            = "<"
-	GT            = ">"
-	EQ            = "=="
-	NOT_EQ        = "!="
+	MINUS    Type = "-"
+	BANG     Type = "!"
+	ASTERISK Type = "*"
+	SLASH    Type = "/"
+	LT       Type = "<"
+	GT       Type = ">"
+	EQ       Type = "=="
+	NOT_EQ   Type = "!="
 	// Delimiters
 	COMMA     Type = ","
 	SEMICOLON Type = ";"
@@ -30,11 +31,11 @@ const (
 	// Keywords
 	FUNCTION Type = "FUNCTION"
 	LET      Type = "LET"
-	TRUE          = "TRUE"
-	FALSE         = "FALSE"
-	IF            = "IF"
-	ELSE          = "ELSE"
-	RETURN        = "RETURN"
+	TRUE     Type = "TRUE"
+	FALSE    Type = "FALSE"
+	IF       Type = "IF"
+	ELSE     Type = "ELSE"
+	RETURN   Type = "RETURN"
 )
 
 type Token struct {
