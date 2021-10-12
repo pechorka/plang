@@ -77,6 +77,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Integer{Value: n.Value}
 	case *ast.Boolean:
 		return boolToBooleanObject(n.Value)
+	case *ast.StringLiteral:
+		return &object.String{Value: n.Value}
 	}
 
 	return NULL
