@@ -58,6 +58,10 @@ func (l *Lexer) Next() (tok token.Token) {
 		tok = l.newToken(token.LBRACE)
 	case '}':
 		tok = l.newToken(token.RBRACE)
+	case '[':
+		tok = l.newToken(token.LBRACKET)
+	case ']':
+		tok = l.newToken(token.RBRACKET)
 	case '!':
 		switch l.nextRune {
 		case '=':
@@ -98,10 +102,6 @@ func (l *Lexer) readRune() {
 	if err == io.EOF {
 		l.nextRune = 0
 	}
-}
-
-func (l *Lexer) peekRune() rune {
-	return l.nextRune
 }
 
 func (l *Lexer) skipWhitespace() {

@@ -27,6 +27,8 @@ const (
 	RPAREN    Type = ")"
 	LBRACE    Type = "{"
 	RBRACE    Type = "}"
+	LBRACKET  Type = "["
+	RBRACKET  Type = "]"
 
 	// Keywords
 	FUNCTION Type = "FUNCTION"
