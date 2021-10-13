@@ -66,6 +66,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFnExpression)
 	p.registerPrefix(token.LBRACKET, p.parseArrayExpression)
+	p.registerPrefix(token.LBRACE, p.parseHashExpression)
 
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -433,6 +434,40 @@ func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
 	}
 
 	return &indexExp
+}
+
+func (p *Parser) parseHashExpression() ast.Expression {
+	hashExpr := ast.HashLiteral{
+		Token: p.curToken,
+		Pairs: map[ast.Expression]ast.Expression{},
+	}
+
+	for p.nextToken.Type != token.RBRACE {
+		p.readToken()
+
+		key := p.parseExpression(LOWEST)
+
+		if !p.isNextToken(token.COLON) {
+			p.appendErrorf("expected colon after key")
+			return nil
+		}
+
+		p.readToken()
+
+		value := p.parseExpression(LOWEST)
+
+		hashExpr.Pairs[key] = value
+
+		if p.nextToken.Type != token.RBRACE && !p.isNextToken(token.COMMA) {
+			return nil
+		}
+	}
+
+	if !p.isNextToken(token.RBRACE) {
+		return nil
+	}
+
+	return &hashExpr
 }
 
 func (p *Parser) isNextToken(tt token.Type) bool {
