@@ -229,12 +229,19 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`last([1,2,3,4])`, 4},
 		{`last(1)`, "argument to `last` must be ARRAY, got INTEGER"},
 		{`last("one", "two")`, "wrong number of arguments. got=2, want=1"},
+		{`rest([1,2])`, []int64{2}},
+		{`rest([1])`, []int64{}},
+		{`rest([])`, nil},
+		{`rest(1)`, "argument to `rest` must be ARRAY, got INTEGER"},
+		{`rest("one", "two")`, "wrong number of arguments. got=2, want=1"},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
 		switch expected := tt.expected.(type) {
 		case int:
 			testIntegerObject(t, evaluated, int64(expected))
+		case []int64:
+			testIntegerArrayObject(t, evaluated, expected)
 		case string:
 			errObj, ok := evaluated.(*object.Error)
 			if !ok {
@@ -404,6 +411,31 @@ func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 		t.Errorf("object has wrong value. got=%d, want=%d",
 			result.Value, expected)
 		return false
+	}
+	return true
+}
+
+func testIntegerArrayObject(t *testing.T, obj object.Object, expected []int64) bool {
+	if expected == nil {
+		if obj != NULL {
+			t.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
+			return false
+		}
+		return true
+	}
+	result, ok := obj.(*object.Array)
+	if !ok {
+		t.Errorf("object is not Array. got=%T (%+v)", obj, obj)
+		return false
+	}
+	if len(expected) != len(result.Elements) {
+		t.Errorf("expected %d elements. got=%d ", len(expected), len(result.Elements))
+		return false
+	}
+	for i := range expected {
+		if !testIntegerObject(t, result.Elements[i], expected[i]) {
+			return false
+		}
 	}
 	return true
 }
