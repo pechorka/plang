@@ -23,6 +23,7 @@ const (
 	// Delimiters
 	COMMA     Type = ","
 	SEMICOLON Type = ";"
+	COLON     Type = ":"
 	LPAREN    Type = "("
 	RPAREN    Type = ")"
 	LBRACE    Type = "{"
