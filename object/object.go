@@ -2,7 +2,10 @@ package object
 
 import (
 	"bytes"
+	"fmt"
+	"hash/fnv"
 	"strconv"
+	"strings"
 
 	"github.com/pechorka/plang/ast"
 )
@@ -19,11 +22,21 @@ const (
 	STRING_OBJ       Type = "STRING"
 	BUILTIN_OBJ      Type = "BUILTIN"
 	ARRAY_OBJ        Type = "ARRAY"
+	HASH_OBJ         Type = "HASH"
 )
 
 type Object interface {
 	Type() Type
 	Inspect() string
+}
+
+type Hashable interface {
+	HashKey() HashKey
+}
+
+type HashKey struct {
+	Type  Type
+	Value uint64
 }
 
 type Integer struct {
@@ -38,6 +51,10 @@ func (i *Integer) Type() Type {
 	return INTEGER_OBJ
 }
 
+func (i *Integer) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
+}
+
 type String struct {
 	Value string
 }
@@ -50,6 +67,12 @@ func (s *String) Type() Type {
 	return STRING_OBJ
 }
 
+func (s *String) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+	return HashKey{Type: s.Type(), Value: h.Sum64()}
+}
+
 type Boolean struct {
 	Value bool
 }
@@ -60,6 +83,16 @@ func (i *Boolean) Inspect() string {
 
 func (i *Boolean) Type() Type {
 	return BOOLEAN_OBJ
+}
+
+func (b *Boolean) HashKey() HashKey {
+	var value uint64
+	if b.Value {
+		value = 1
+	} else {
+		value = 0
+	}
+	return HashKey{Type: b.Type(), Value: value}
 }
 
 type Null struct {
@@ -177,5 +210,30 @@ func (ao *Array) Inspect() string {
 		out.WriteString(e.Inspect())
 	}
 	out.WriteString("]")
+	return out.String()
+}
+
+type HashPair struct {
+	Key   Object
+	Value Object
+}
+type Hash struct {
+	Pairs map[HashKey]HashPair
+}
+
+func (h *Hash) Type() Type {
+	return HASH_OBJ
+}
+
+func (h *Hash) Inspect() string {
+	var out bytes.Buffer
+	pairs := []string{}
+	for _, pair := range h.Pairs {
+		pairs = append(pairs, fmt.Sprintf("%s: %s",
+			pair.Key.Inspect(), pair.Value.Inspect()))
+	}
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
 	return out.String()
 }
