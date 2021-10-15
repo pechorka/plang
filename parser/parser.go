@@ -296,7 +296,8 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	ifExp.Then = p.parseBlockStatement()
 
-	if p.curToken.Type == token.ELSE {
+	if p.nextToken.Type == token.ELSE {
+		p.readToken()
 		if !p.isNextToken(token.LBRACE) {
 			p.appendErrorf("invalid if expression: no { after else")
 			return nil
@@ -323,7 +324,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		p.readToken()
 	}
 
-	p.readToken() // consume token.RBRACE
+	// p.readToken() // consume token.RBRACE
 
 	return &blockStmt
 }
