@@ -60,6 +60,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			Env:        env,
 		}
 	case *ast.CallExpression:
+		if n.Function.TokenLiteral() == "quote" {
+			return quote(n.Arguments)
+		}
 		function := Eval(n.Function, env)
 		if isError(function) {
 			return function
@@ -339,6 +342,16 @@ func extendFunctionEnv(fn *object.Function, args []object.Object) *object.Enviro
 		env.Set(param.Value, args[paramName])
 	}
 	return env
+}
+
+func quote(args []ast.Expression) object.Object {
+	if len(args) != 1 {
+		return newError("expected %d param to quote, got %d", 1, len(args))
+	}
+
+	return &object.Quote{
+		Node: args[0],
+	}
 }
 
 func unwrapReturnValue(obj object.Object) object.Object {
