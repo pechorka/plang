@@ -13,6 +13,8 @@ func Modify(node Node, modifier ModifierFunc) Node {
 	case *InfixExpression:
 		n.Left, _ = Modify(n.Left, modifier).(Expression)
 		n.Right, _ = Modify(n.Right, modifier).(Expression)
+	case *PrefixExpression:
+		n.Right, _ = Modify(n.Right, modifier).(Expression)
 	}
 	return modifier(node)
 }
