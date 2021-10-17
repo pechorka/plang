@@ -352,3 +352,27 @@ func (hl *HashLiteral) String() string {
 	out.WriteString("}")
 	return out.String()
 }
+
+type MacroExpression struct {
+	Token  token.Token
+	Params []*Identifier
+	Body   *BlockStatement
+}
+
+func (fe *MacroExpression) expressionNode() {}
+func (fe *MacroExpression) TokenLiteral() string {
+	return fe.Token.Literal
+}
+func (fe *MacroExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("fn (")
+	for i, ident := range fe.Params {
+		if i > 0 {
+			out.WriteString(",")
+		}
+		out.WriteString(ident.String())
+	}
+	out.WriteString("fn )")
+	out.WriteString(fe.Body.String())
+	return out.String()
+}

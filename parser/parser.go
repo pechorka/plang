@@ -67,6 +67,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FUNCTION, p.parseFnExpression)
 	p.registerPrefix(token.LBRACKET, p.parseArrayExpression)
 	p.registerPrefix(token.LBRACE, p.parseHashExpression)
+	p.registerPrefix(token.MACRO, p.parseMacroExpression)
 
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -349,6 +350,28 @@ func (p *Parser) parseFnExpression() ast.Expression {
 	fnExpr.Body = p.parseBlockStatement()
 
 	return &fnExpr
+}
+
+func (p *Parser) parseMacroExpression() ast.Expression {
+	macroExpr := ast.MacroExpression{
+		Token: p.curToken,
+	}
+
+	if !p.isNextToken(token.LPAREN) {
+		p.appendErrorf("invalid macro expression: no ( after macro")
+		return nil
+	}
+
+	macroExpr.Params = p.parseFnParams()
+
+	if !p.isNextToken(token.LBRACE) {
+		p.appendErrorf("invalid macro expression: no { after param list")
+		return nil
+	}
+
+	macroExpr.Body = p.parseBlockStatement()
+
+	return &macroExpr
 }
 
 func (p *Parser) parseFnParams() []*ast.Identifier {
