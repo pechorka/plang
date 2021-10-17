@@ -2,9 +2,11 @@ package evaluator
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/pechorka/plang/ast"
 	"github.com/pechorka/plang/object"
+	"github.com/pechorka/plang/token"
 )
 
 var (
@@ -61,7 +63,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 	case *ast.CallExpression:
 		if n.Function.TokenLiteral() == "quote" {
-			return quote(n.Arguments)
+			return quote(n.Arguments, env)
 		}
 		function := Eval(n.Function, env)
 		if isError(function) {
@@ -344,14 +346,66 @@ func extendFunctionEnv(fn *object.Function, args []object.Object) *object.Enviro
 	return env
 }
 
-func quote(args []ast.Expression) object.Object {
+func quote(args []ast.Expression, env *object.Environment) object.Object {
 	if len(args) != 1 {
 		return newError("expected %d param to quote, got %d", 1, len(args))
 	}
 
+	node := evalUnquoteCalls(args[0], env)
+
 	return &object.Quote{
-		Node: args[0],
+		Node: node,
 	}
+}
+
+func evalUnquoteCalls(arg ast.Node, env *object.Environment) ast.Node {
+	return ast.Modify(arg, func(node ast.Node) ast.Node {
+		if !isUnquoteCall(node) {
+			return node
+		}
+
+		call, ok := node.(*ast.CallExpression)
+		if !ok {
+			return node
+		}
+		if len(call.Arguments) != 1 {
+			return node
+		}
+
+		obj := Eval(call.Arguments[0], env)
+
+		return convertObjectToASTNode(obj)
+	})
+}
+
+func convertObjectToASTNode(obj object.Object) ast.Node {
+	switch obj := obj.(type) {
+	case *object.Integer:
+		t := token.Token{
+			Type:    token.INT,
+			Literal: strconv.FormatInt(obj.Value, 10),
+		}
+		return &ast.IntegerLiteral{Token: t, Value: obj.Value}
+	case *object.Boolean:
+		t := token.Token{
+			Type:    token.FALSE,
+			Literal: strconv.FormatBool(obj.Value),
+		}
+		if obj.Value {
+			t.Type = token.TRUE
+		}
+		return &ast.Boolean{Token: t, Value: obj.Value}
+	default:
+		return nil
+	}
+}
+
+func isUnquoteCall(node ast.Node) bool {
+	callExpression, ok := node.(*ast.CallExpression)
+	if !ok {
+		return false
+	}
+	return callExpression.Function.TokenLiteral() == "unquote"
 }
 
 func unwrapReturnValue(obj object.Object) object.Object {
