@@ -80,9 +80,36 @@ func TestModify(t *testing.T) {
 			&IndexExpression{Left: one(), Index: one()},
 			&IndexExpression{Left: two(), Index: two()},
 		},
+		{
+			&IfExpression{
+				Condition: one(),
+				Then: &BlockStatement{
+					Statements: []Statement{
+						&ExpressionStatement{Expression: one()},
+					}},
+				Else: &BlockStatement{
+					Statements: []Statement{
+						&ExpressionStatement{Expression: one()},
+					},
+				},
+			},
+			&IfExpression{
+				Condition: two(),
+				Then: &BlockStatement{
+					Statements: []Statement{
+						&ExpressionStatement{Expression: two()},
+					},
+				},
+				Else: &BlockStatement{
+					Statements: []Statement{
+						&ExpressionStatement{Expression: two()},
+					},
+				},
+			},
+		},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range tests[6:] {
 		modified := Modify(tt.input, turnOneIntoTwo)
 		equal := reflect.DeepEqual(modified, tt.expected)
 		if !equal {

@@ -8,6 +8,10 @@ func Modify(node Node, modifier ModifierFunc) Node {
 		for i, statement := range n.Statements {
 			n.Statements[i], _ = Modify(statement, modifier).(Statement)
 		}
+	case *BlockStatement:
+		for i := range n.Statements {
+			n.Statements[i], _ = Modify(n.Statements[i], modifier).(Statement)
+		}
 	case *ExpressionStatement:
 		n.Expression, _ = Modify(n.Expression, modifier).(Expression)
 	case *InfixExpression:
@@ -18,6 +22,12 @@ func Modify(node Node, modifier ModifierFunc) Node {
 	case *IndexExpression:
 		n.Left, _ = Modify(n.Left, modifier).(Expression)
 		n.Index, _ = Modify(n.Index, modifier).(Expression)
+	case *IfExpression:
+		n.Condition, _ = Modify(n.Condition, modifier).(Expression)
+		n.Then, _ = Modify(n.Then, modifier).(*BlockStatement)
+		if n.Else != nil {
+			n.Else, _ = Modify(n.Else, modifier).(*BlockStatement)
+		}
 	}
 	return modifier(node)
 }
