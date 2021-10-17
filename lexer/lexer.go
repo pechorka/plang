@@ -179,6 +179,8 @@ func lookupIdentType(ident string) token.Type {
 		return token.FALSE
 	case "return":
 		return token.RETURN
+	case "macro":
+		return token.MACRO
 	default:
 		return token.IDENT
 	}
