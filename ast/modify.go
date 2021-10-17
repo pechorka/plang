@@ -32,6 +32,11 @@ func Modify(node Node, modifier ModifierFunc) Node {
 		n.Value, _ = Modify(n.Value, modifier).(Expression)
 	case *LetStatement:
 		n.Value, _ = Modify(n.Value, modifier).(Expression)
+	case *FnExpression:
+		for i := range n.Params {
+			n.Params[i], _ = Modify(n.Params[i], modifier).(*Identifier)
+		}
+		n.Body, _ = Modify(n.Body, modifier).(*BlockStatement)
 	}
 	return modifier(node)
 }

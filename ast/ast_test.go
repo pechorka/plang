@@ -115,6 +115,31 @@ func TestModify(t *testing.T) {
 			&LetStatement{Value: one()},
 			&LetStatement{Value: two()},
 		},
+		{
+			&FnExpression{
+				Params: []*Identifier{
+					{
+						Value: "not 2",
+					},
+				},
+				Body: &BlockStatement{
+					Statements: []Statement{
+						&ExpressionStatement{Expression: one()},
+					},
+				},
+			},
+			&FnExpression{
+				Params: []*Identifier{
+					{
+						Value: "not 2",
+					},
+				},
+				Body: &BlockStatement{
+					Statements: []Statement{
+						&ExpressionStatement{Expression: two()},
+					},
+				},
+			}},
 	}
 
 	for _, tt := range tests[6:] {
