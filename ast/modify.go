@@ -28,6 +28,8 @@ func Modify(node Node, modifier ModifierFunc) Node {
 		if n.Else != nil {
 			n.Else, _ = Modify(n.Else, modifier).(*BlockStatement)
 		}
+	case *ReturnStatement:
+		n.Value, _ = Modify(n.Value, modifier).(Expression)
 	}
 	return modifier(node)
 }
